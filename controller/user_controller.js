@@ -9,9 +9,9 @@ const users = require("../models/userSchema");
 
 const postUserdata = async (req,res)=>{
     // console.log(req.body);
-    const {name,email,tech} = req.body;
+    const {name,email,tech,password} = req.body;
 
-    if(!name || !email || !tech)
+    if(!name || !email || !tech || !password)
     {
         res.status(422).json("please fill the data");
     }
@@ -24,8 +24,11 @@ const postUserdata = async (req,res)=>{
             res.status(422).json("this user is already present");
         }else{
             const adduser = new users({
-                name,email,tech
+                name,email,tech,password
             });
+
+            const token  = await adduser.generateAuthToken();
+            console.log(token);
 
             await adduser.save();
             res.status(201).json(adduser);
@@ -96,4 +99,22 @@ const deleteUserdata = async (req,res) => {
     }
 };
 
-module.exports = {postUserdata,getUserdata,getOwndata,updateUserdata,deleteUserdata};
+// user login
+
+const userlogin = async (req,res) => {
+    try {
+        const {email,password} = req.body;
+        const useremail = await users.findOne({email:email});
+
+        if(useremail.password == password){
+            res.status(201).json("Login Successful");
+            console.log("Login Successful");
+        }else{
+            res.status(422).json("Invalid Login Credentials");
+        }
+    } catch (error) {
+        res.status(422).json(error);
+    }
+};
+
+module.exports = {postUserdata,getUserdata,getOwndata,updateUserdata,deleteUserdata,userlogin};
