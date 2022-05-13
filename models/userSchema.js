@@ -1,6 +1,7 @@
 const mongoose = require("mongoose");
 const jwt = require("jsonwebtoken");
-const { save } = require("debug/src/node");
+const dotenv = require("dotenv");
+dotenv.config({ path: './config.env' });
 
 const userSchema = new mongoose.Schema({
     name: {
@@ -20,19 +21,18 @@ const userSchema = new mongoose.Schema({
         type: Number,
         required: true
     },
-    tokens:[{
-        token:{
-            type: String,
-            required: true
-        }
-    }]
+    token: {
+        type: String,
+        default: ''
+    }
 });
 
-userSchema.methods.generateAuthToken = async function() {
+userSchema.methods.generateAuthToken = async function () {
     try {
-        const token = jwt.sign({email:this.email.toString()}, "hellomynameisrajkamalsenandiamfine");
-        this.tokens = this.tokens.concat({token:token})
-        await this.save();
+        const users = this
+        const token = jwt.sign({ _id: users._id }, process.env.SECRET_KEY);
+        users.token = token;
+        await users.save();
         return token;
     } catch (error) {
         res.send(error);

@@ -1,4 +1,6 @@
 const users = require("../models/userSchema");
+const jwt = require("jsonwebtoken");
+const auth = require("../middleware/user_auth");
 
 
 // router.get("/",(req,res)=>{
@@ -26,9 +28,6 @@ const postUserdata = async (req,res)=>{
             const adduser = new users({
                 name,email,tech,password
             });
-
-            const token  = await adduser.generateAuthToken();
-            console.log(token);
 
             await adduser.save();
             res.status(201).json(adduser);
@@ -105,6 +104,16 @@ const userlogin = async (req,res) => {
     try {
         const {email,password} = req.body;
         const useremail = await users.findOne({email:email});
+
+        const token  = await useremail.generateAuthToken();
+        console.log(token);
+        useremail.token = token;
+        await useremail.save();
+
+        res.cookie("jwt_cookie",token,{
+            expires: new Date(Date.now() + 25892000000),
+            httpOnly: true
+        });
 
         if(useremail.password == password){
             res.status(201).json("Login Successful");
